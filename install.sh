@@ -150,3 +150,24 @@ if [[ " ${TOOLS[*]} " == *" claude "* ]]; then
   echo ""
   echo "Hint: run scripts/hydrate.sh to install external dependencies (playwright-cli, it2, etc.)"
 fi
+
+# ── Offer to commit ───────────────────────────────────────────────────────────
+if git -C "$TARGET_DIR" rev-parse --git-dir &>/dev/null; then
+  echo ""
+  read -rp "Commit installed files? [y/N] " COMMIT_CHOICE
+  if [[ "$COMMIT_CHOICE" =~ ^[Yy]$ ]]; then
+    STAGE_PATHS=()
+    for TOOL in "${TOOLS[@]}"; do
+      case "$TOOL" in
+        claude)   STAGE_PATHS+=(".claude/commands" ".claude/skills") ;;
+        windsurf) STAGE_PATHS+=(".windsurf") ;;
+        cursor)   STAGE_PATHS+=(".cursor") ;;
+        copilot)  STAGE_PATHS+=(".github/copilot-instructions.md") ;;
+      esac
+    done
+    git -C "$TARGET_DIR" add "${STAGE_PATHS[@]}"
+    TOOL_LABELS="${TOOLS[*]}"
+    git -C "$TARGET_DIR" commit -m "chore: add labkit agentic patterns (${TOOL_LABELS// /, })"
+    echo "Committed."
+  fi
+fi
