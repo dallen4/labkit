@@ -38,6 +38,11 @@ Cherry-pick exactly what you need — commands, skills, and rules for Claude Cod
 - `agentic-workflow` — Multi-agent orchestration patterns
 - `pr-workflow` — PR creation and review conventions
 
+**Settings** (`.claude/settings.json`):
+- Enables `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`
+- Pre-approves `wt`, `it2`, `playwright-cli`, core git, and `gh` commands
+- Enables the `worktrunk` plugin
+
 ## Quick Start
 
 ### npm package (recommended)
