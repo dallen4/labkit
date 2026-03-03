@@ -69,15 +69,15 @@ copy_dir() {
   fi
 }
 
-# Merge labkit settings into target .claude/settings.local.json
+# Merge labkit settings into target .claude/settings.json
 merge_claude_settings() {
-  local src="$LABKIT_DIR/.claude/settings.local.json"
-  local dst="$TARGET_DIR/.claude/settings.local.json"
+  local src="$LABKIT_DIR/.claude/settings.json"
+  local dst="$TARGET_DIR/.claude/settings.json"
 
   if [[ ! -f "$dst" ]]; then
     mkdir -p "$(dirname "$dst")"
     cp "$src" "$dst"
-    echo "  created  .claude/settings.local.json"
+    echo "  created  .claude/settings.json"
     return
   fi
 
@@ -95,10 +95,10 @@ merge_claude_settings() {
       }
     ' "$dst" "$src")
     echo "$merged" > "$dst"
-    echo "  merged   .claude/settings.local.json"
+    echo "  merged   .claude/settings.json"
   else
-    echo "  skipped  .claude/settings.local.json (already exists — install jq for auto-merge)"
-    echo "           manually merge from: $LABKIT_DIR/.claude/settings.local.json"
+    echo "  skipped  .claude/settings.json (already exists — install jq for auto-merge)"
+    echo "           manually merge from: $LABKIT_DIR/.claude/settings.json"
   fi
 }
 

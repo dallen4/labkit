@@ -22,7 +22,7 @@ Full agentic tooling — slash commands, skills, and recommended settings.
 - `playwright-cli` — browser automation for visual verification
 - `it2` — iTerm2 control for multi-pane agent orchestration
 
-**Settings** (`.claude/settings.local.json`):
+**Settings** (`.claude/settings.json`):
 - Enables `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`
 - Pre-approves `wt`, `it2`, `playwright-cli`, core git, and `gh` commands
 
@@ -55,7 +55,7 @@ Run from inside your target project, or pass a path:
 /path/to/labkit/install.sh --claude --force
 ```
 
-Claude settings are **merged** (not overwritten) if `.claude/settings.local.json` already exists. Requires `jq` for automatic merging; otherwise you'll get a manual-merge prompt.
+Claude settings are **merged** (not overwritten) if `.claude/settings.json` already exists. Requires `jq` for automatic merging; otherwise you'll get a manual-merge prompt.
 
 ## Hydration
 

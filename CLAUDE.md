@@ -11,7 +11,7 @@ labkit is a reusable kit of agentic patterns for AI coding assistants. Primary t
 ```
 .claude/commands/       Slash commands (commit, create-pr, spawn, focus, worktrees, teardown, research)
 .claude/skills/         Skills with reference docs (playwright-cli, it2)
-.claude/settings.local.json  Recommended permissions + agent teams env var
+.claude/settings.json  Recommended permissions + agent teams env var
 .windsurf/rules/        Windsurf rule files (.md)
 .cursor/rules/          Cursor rule files (.mdc with frontmatter)
 .github/copilot-instructions.md  GitHub Copilot instructions
@@ -29,7 +29,7 @@ The only executable. Copies the appropriate dotfile directories into a target pr
 
 - Interactive picker when no flags are passed
 - `--force` overwrites existing files; default is `--ignore-existing` via rsync
-- Claude settings are **merged** (not overwritten) using `jq` when `.claude/settings.local.json` already exists in the target
+- Claude settings are **merged** (not overwritten) using `jq` when `.claude/settings.json` already exists in the target
 ## Pattern Parity
 
 The Windsurf, Cursor, and Copilot files encode the same conventions as the Claude Code commands but as passive rule/instruction files (those editors don't support slash commands or skills). When updating a convention (e.g., commit format), update all four surfaces:

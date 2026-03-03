@@ -1,0 +1,23 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(wt:*)",
+      "Bash(it2:*)",
+      "Bash(playwright-cli:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git diff --cached:*)",
+      "Bash(git status:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh issue:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)"
+    ]
+  },
+  "enabledPlugins": {
+    "worktrunk@worktrunk": true
+  }
+}
