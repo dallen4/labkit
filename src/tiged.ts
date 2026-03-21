@@ -1,10 +1,10 @@
-import { tiged } from 'tiged';
+import tiged from 'tiged';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { rm, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import type { LabkitConfig } from './config';
-import type { Platform } from './manifest';
+import { Platform } from './manifest';
 
 const execAsync = promisify(exec);
 
@@ -52,21 +52,21 @@ async function stageDirectories(source: string, platforms: Platform[]): Promise<
   );
 
   // Fetch platform-specific directories
-  if (platforms.includes('cursor')) {
+  if (platforms.includes(Platform.Cursor)) {
     stagingTasks.push(
       tiged(`${source}/.cursor`, { force: true, verbose: false })
         .clone(`${STAGE_DIR}/.cursor`)
     );
   }
 
-  if (platforms.includes('windsurf')) {
+  if (platforms.includes(Platform.Windsurf)) {
     stagingTasks.push(
       tiged(`${source}/.windsurf`, { force: true, verbose: false })
         .clone(`${STAGE_DIR}/.windsurf`)
     );
   }
 
-  if (platforms.includes('copilot')) {
+  if (platforms.includes(Platform.Copilot)) {
     stagingTasks.push(
       tiged(`${source}/.github`, { force: true, verbose: false })
         .clone(`${STAGE_DIR}/.github`)
@@ -88,19 +88,36 @@ async function stageDirectories(source: string, platforms: Platform[]): Promise<
 async function copyPatterns(config: LabkitConfig): Promise<string[]> {
   const copied: string[] = [];
 
-  // Skills → .claude/skills/ (cross-compat path for all platforms)
-  for (const skill of config.skills) {
-    const src = `${STAGE_DIR}/.claude/skills/${skill}`;
-    const dest = `.claude/skills/${skill}`;
+  // Skills → copy to all platform-specific directories for redundancy
+  // All platforms support SKILL.md, so we install to each platform's native directory
+  if (config.skills.length > 0) {
+    const skillDirs: Record<Platform, string> = {
+      [Platform.Claude]: '.claude/skills',
+      [Platform.Cursor]: '.cursor/skills',
+      [Platform.Windsurf]: '.windsurf/skills',
+      [Platform.Copilot]: '.github/skills'
+    };
 
-    if (existsSync(src)) {
-      await cpx(`${src}/**/*`, dest);
-      copied.push(dest);
+    for (const platform of config.platforms) {
+      const platformSkillsDir = skillDirs[platform];
+      if (!platformSkillsDir) continue;
+
+      await mkdir(platformSkillsDir, { recursive: true });
+
+      for (const skill of config.skills) {
+        const src = `${STAGE_DIR}/.claude/skills/${skill}`;
+        const dest = `${platformSkillsDir}/${skill}`;
+
+        if (existsSync(src)) {
+          await cpx(`${src}/**/*`, dest);
+          copied.push(dest);
+        }
+      }
     }
   }
 
   // Commands → per-platform
-  if (config.platforms.includes('claude') && config.commands.length > 0) {
+  if (config.platforms.includes(Platform.Claude) && config.commands.length > 0) {
     await mkdir('.claude/commands', { recursive: true });
     for (const cmd of config.commands) {
       const src = `${STAGE_DIR}/.claude/commands/${cmd}.md`;
@@ -113,7 +130,7 @@ async function copyPatterns(config: LabkitConfig): Promise<string[]> {
     }
   }
 
-  if (config.platforms.includes('cursor') && config.commands.length > 0) {
+  if (config.platforms.includes(Platform.Cursor) && config.commands.length > 0) {
     await mkdir('.cursor/commands', { recursive: true });
     for (const cmd of config.commands) {
       const src = `${STAGE_DIR}/.cursor/commands/${cmd}.md`;
@@ -127,7 +144,7 @@ async function copyPatterns(config: LabkitConfig): Promise<string[]> {
   }
 
   // Rules → per-platform
-  if (config.platforms.includes('cursor') && config.rules.length > 0) {
+  if (config.platforms.includes(Platform.Cursor) && config.rules.length > 0) {
     await mkdir('.cursor/rules', { recursive: true });
     for (const rule of config.rules) {
       const src = `${STAGE_DIR}/.cursor/rules/${rule}.mdc`;
@@ -140,7 +157,7 @@ async function copyPatterns(config: LabkitConfig): Promise<string[]> {
     }
   }
 
-  if (config.platforms.includes('windsurf') && config.rules.length > 0) {
+  if (config.platforms.includes(Platform.Windsurf) && config.rules.length > 0) {
     await mkdir('.windsurf/rules', { recursive: true });
     for (const rule of config.rules) {
       const src = `${STAGE_DIR}/.windsurf/rules/${rule}.md`;
@@ -153,7 +170,7 @@ async function copyPatterns(config: LabkitConfig): Promise<string[]> {
     }
   }
 
-  if (config.platforms.includes('copilot')) {
+  if (config.platforms.includes(Platform.Copilot)) {
     await mkdir('.github', { recursive: true });
     const src = `${STAGE_DIR}/.github/copilot-instructions.md`;
     const dest = `.github/copilot-instructions.md`;
