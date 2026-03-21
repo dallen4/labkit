@@ -3,10 +3,10 @@ import { writeConfig, readConfig } from './config';
 import { pullPatterns } from './tiged';
 import {
   PLATFORMS,
+  Platform,
   getAvailableSkills,
   getAvailableCommands,
-  getAvailableRules,
-  type Platform
+  getAvailableRules
 } from './manifest';
 
 export async function init(): Promise<void> {
@@ -90,7 +90,7 @@ export async function init(): Promise<void> {
 
   if (availableCommands.length > 0) {
     const platformNames = selectedPlatforms
-      .filter(p => ['claude', 'cursor'].includes(p))
+      .filter(p => [Platform.Claude, Platform.Cursor].includes(p))
       .map(p => PLATFORMS[p].name)
       .join(', ');
 
@@ -114,7 +114,7 @@ export async function init(): Promise<void> {
 
   if (availableRules.length > 0) {
     const platformNames = selectedPlatforms
-      .filter(p => ['cursor', 'windsurf'].includes(p))
+      .filter(p => [Platform.Cursor, Platform.Windsurf].includes(p))
       .map(p => PLATFORMS[p].name)
       .join(', ');
 

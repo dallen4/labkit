@@ -2,7 +2,14 @@
  * Single source of truth for available patterns in labkit
  */
 
-export type Platform = 'claude' | 'cursor' | 'windsurf' | 'copilot';
+export enum Platform {
+  Claude = 'claude',
+  Cursor = 'cursor',
+  Windsurf = 'windsurf',
+  Copilot = 'copilot'
+}
+
+const allPlatforms = [Platform.Claude, Platform.Cursor, Platform.Windsurf, Platform.Copilot];
 
 export interface Skill {
   name: string;
@@ -23,19 +30,19 @@ export interface Rule {
 }
 
 export const PLATFORMS: Record<Platform, { name: string; description: string }> = {
-  claude: {
+  [Platform.Claude]: {
     name: 'Claude Code',
     description: 'Full support: commands, skills, settings'
   },
-  cursor: {
+  [Platform.Cursor]: {
     name: 'Cursor',
     description: 'Commands, skills, and rules'
   },
-  windsurf: {
+  [Platform.Windsurf]: {
     name: 'Windsurf',
     description: 'Skills and rules'
   },
-  copilot: {
+  [Platform.Copilot]: {
     name: 'GitHub Copilot',
     description: 'Skills and instructions'
   }
@@ -45,12 +52,12 @@ export const SKILLS: Skill[] = [
   {
     name: 'playwright-cli',
     description: 'Browser automation for testing, screenshots, and data extraction',
-    platforms: ['claude', 'cursor', 'windsurf', 'copilot']
+    platforms: [Platform.Claude, Platform.Cursor, Platform.Windsurf, Platform.Copilot]
   },
   {
     name: 'it2',
     description: 'iTerm2 terminal control — manage sessions, windows, tabs, and broadcast input',
-    platforms: ['claude', 'cursor', 'windsurf', 'copilot']
+    platforms: [Platform.Claude, Platform.Cursor, Platform.Windsurf, Platform.Copilot]
   }
 ];
 
@@ -58,37 +65,37 @@ export const COMMANDS: Command[] = [
   {
     name: 'spawn',
     description: 'Create worktree + iTerm2 pane + agent',
-    platforms: ['claude', 'cursor']
+    platforms: [Platform.Claude, Platform.Cursor]
   },
   {
     name: 'commit',
     description: 'Conventional commits from staged changes',
-    platforms: ['claude', 'cursor']
+    platforms: [Platform.Claude, Platform.Cursor]
   },
   {
     name: 'create-pr',
     description: 'Structured PR creation',
-    platforms: ['claude', 'cursor']
+    platforms: [Platform.Claude, Platform.Cursor]
   },
   {
     name: 'focus',
     description: 'Focus iTerm2 pane by branch',
-    platforms: ['claude', 'cursor']
+    platforms: [Platform.Claude, Platform.Cursor]
   },
   {
     name: 'worktrees',
     description: 'List worktrees + sessions',
-    platforms: ['claude', 'cursor']
+    platforms: [Platform.Claude, Platform.Cursor]
   },
   {
     name: 'teardown',
     description: 'Close pane + remove worktree',
-    platforms: ['claude', 'cursor']
+    platforms: [Platform.Claude, Platform.Cursor]
   },
   {
     name: 'research',
     description: 'Parallel codebase + web investigation',
-    platforms: ['claude', 'cursor']
+    platforms: [Platform.Claude, Platform.Cursor]
   }
 ];
 
@@ -96,17 +103,17 @@ export const RULES: Rule[] = [
   {
     name: 'commit-conventions',
     description: 'Conventional commit format and patterns',
-    platforms: ['cursor', 'windsurf']
+    platforms: [Platform.Cursor, Platform.Windsurf]
   },
   {
     name: 'agentic-workflow',
     description: 'Multi-agent orchestration patterns',
-    platforms: ['cursor', 'windsurf']
+    platforms: [Platform.Cursor, Platform.Windsurf]
   },
   {
     name: 'pr-workflow',
     description: 'PR creation and review conventions',
-    platforms: ['cursor', 'windsurf']
+    platforms: [Platform.Cursor, Platform.Windsurf]
   }
 ];
 
