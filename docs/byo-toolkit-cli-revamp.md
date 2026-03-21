@@ -11,15 +11,15 @@ Two distribution layers: a **shell script** (`labkit.sh`) for portability and a 
 
 ## Platform Capabilities
 
-Skills and commands are no longer Claude-exclusive. All platforms now support the SKILL.md standard, and multiple platforms read from `.claude/skills/` as a cross-compatibility path.
+Skills and commands are no longer Claude-exclusive. All platforms now support the SKILL.md standard as of 2026.
 
 | Feature | Claude | Cursor | Windsurf | Copilot |
 |---------|--------|--------|----------|---------|
-| **Skills** (`SKILL.md` dirs) | `.claude/skills/` | `.cursor/skills/` or `.claude/skills/` | `.windsurf/skills/` or `.claude/skills/` | `.github/skills/` or `.claude/skills/` |
+| **Skills** (`SKILL.md` dirs) | `.claude/skills/` | `.cursor/skills/` | `.windsurf/skills/` | `.github/skills/` |
 | **Commands** (slash) | `.claude/commands/*.md` | `.cursor/commands/*.md` | — | — |
 | **Rules** (passive context) | — | `.cursor/rules/*.mdc` | `.windsurf/rules/*.md` | `.github/copilot-instructions.md` |
 
-Key insight: `.claude/skills/` is a cross-compat path for Cursor, Windsurf, and Copilot. So a single skills install covers all platforms. Commands need per-platform copies (Claude + Cursor). Rules are platform-specific formats.
+**Skills strategy:** All platforms support the SKILL.md standard as of 2026. labkit installs skills to each platform's native directory for maximum compatibility. While some platforms support reading from `.claude/skills/` as a fallback (requires opt-in settings), we install to platform-specific directories to ensure zero-config operation. Commands need per-platform copies (Claude + Cursor). Rules are platform-specific formats.
 
 ## CLI Design
 
@@ -62,9 +62,9 @@ rules:
   - pr-workflow
 ```
 
-- `source` — GitHub user/repo for degit. Defaults to `dallen4/labkit`
+- `source` — GitHub user/repo for tiged. Defaults to `dallen4/labkit`
 - `platforms` — Which platforms you use. Determines where files get placed and what's available
-- `skills` — Skill directories to pull. Placed in `.claude/skills/` (cross-compat path covers all platforms). If platform-specific skill dirs exist in labkit, those are pulled too
+- `skills` — Skill directories to pull. Installed to each platform's native skills directory (`.claude/skills/`, `.cursor/skills/`, `.windsurf/skills/`, `.github/skills/`)
 - `commands` — Slash commands to pull. Placed in `.claude/commands/` and `.cursor/commands/` if those platforms are selected
 - `rules` — Passive rule files. Placed in `.cursor/rules/`, `.windsurf/rules/`, `.github/` per selected platforms
 
