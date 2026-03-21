@@ -1,13 +1,24 @@
 # labkit
 
-Agentic patterns I find handy and reliable — optimized for Claude Code, with adapters for Windsurf, Cursor, and GitHub Copilot.
+**Build your own toolkit** of agentic patterns for AI coding assistants.
+
+Cherry-pick exactly what you need — commands, skills, and rules for Claude Code, Cursor, Windsurf, and GitHub Copilot. Pull from GitHub, configure once, sync anytime.
 
 ## What's included
 
-### Claude Code (`.claude/`)
-Full agentic tooling — slash commands, skills, and recommended settings.
+### Platform Support
 
-**Commands** (`.claude/commands/`):
+| Feature | Claude | Cursor | Windsurf | Copilot |
+|---------|--------|--------|----------|---------|
+| **Skills** (`SKILL.md` dirs) | `.claude/skills/` | `.cursor/skills/` or `.claude/skills/` | `.windsurf/skills/` or `.claude/skills/` | `.github/skills/` or `.claude/skills/` |
+| **Commands** (slash) | `.claude/commands/*.md` | `.cursor/commands/*.md` | — | — |
+| **Rules** (passive context) | — | `.cursor/rules/*.mdc` | `.windsurf/rules/*.md` | `.github/copilot-instructions.md` |
+
+**Key insight:** `.claude/skills/` is a cross-compat path for Cursor, Windsurf, and Copilot. A single skills install covers all platforms.
+
+### Available Patterns
+
+**Commands** (Claude, Cursor):
 | Command | Description |
 |---|---|
 | `/commit` | Conventional commit from staged changes |
@@ -18,71 +29,127 @@ Full agentic tooling — slash commands, skills, and recommended settings.
 | `/teardown <branch>` | Close iTerm2 pane + remove worktree |
 | `/research <topic>` | Parallel codebase + web research → plan file |
 
-**Skills** (`.claude/skills/`):
-- `playwright-cli` — browser automation for visual verification
+**Skills** (all platforms via `.claude/skills/`):
+- `playwright-cli` — browser automation for testing, screenshots, data extraction
 - `it2` — iTerm2 control for multi-pane agent orchestration
 
-**Settings** (`.claude/settings.json`):
-- Enables `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`
-- Pre-approves `wt`, `it2`, `playwright-cli`, core git, and `gh` commands
+**Rules** (Cursor, Windsurf, Copilot):
+- `commit-conventions` — Conventional commit format and patterns
+- `agentic-workflow` — Multi-agent orchestration patterns
+- `pr-workflow` — PR creation and review conventions
 
-### Windsurf (`.windsurf/rules/`)
-Three rule files covering agentic workflow, commit conventions, and PR format.
+## Quick Start
 
-### Cursor (`.cursor/rules/`)
-Same content as Windsurf rules, in `.mdc` format with frontmatter.
+### npm package (recommended)
 
-### GitHub Copilot (`.github/copilot-instructions.md`)
-Single instructions file combining all three rule areas.
-
-## Install
-
-Run from inside your target project, or pass a path:
+Interactive setup with rich prompts:
 
 ```bash
-# interactive
-/path/to/labkit/install.sh
+# Run from your project directory
+npx labkit init
 
-# specific tool(s)
-/path/to/labkit/install.sh --claude
-/path/to/labkit/install.sh --windsurf --cursor
-/path/to/labkit/install.sh --all
-
-# into a specific project directory
-/path/to/labkit/install.sh /path/to/my-project --claude
-
-# overwrite existing files
-/path/to/labkit/install.sh --claude --force
+# Update patterns later
+npx labkit sync
 ```
 
-Claude settings are **merged** (not overwritten) if `.claude/settings.json` already exists. Requires `jq` for automatic merging; otherwise you'll get a manual-merge prompt.
+The `init` command walks you through:
+1. Platform selection (Claude, Cursor, Windsurf, Copilot)
+2. Skills to install (cross-platform, goes in `.claude/skills/`)
+3. Commands to install (Claude + Cursor only)
+4. Rules to install (platform-specific)
 
-## Hydration
+It creates a `.labkitrc` config file and pulls the selected patterns from GitHub using `tiged`.
 
-Skills that depend on external tooling ship with hydration scripts. After installing, run:
+### Shell script alternative
+
+For environments where you prefer a standalone bash script:
 
 ```bash
-# install all external dependencies
-/path/to/labkit/scripts/hydrate.sh
+# Fetch the script once
+npx tiged dallen4/labkit/labkit.sh ./labkit.sh
+chmod +x labkit.sh
 
-# single skill only
-/path/to/labkit/scripts/hydrate.sh playwright-cli
+# Interactive setup
+./labkit.sh init
 
-# preview what would run
-/path/to/labkit/scripts/hydrate.sh --dry-run
+# Sync from config
+./labkit.sh sync
+```
+
+Or run directly without saving:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/dallen4/labkit/main/labkit.sh | bash -s -- init
+```
+
+### Config format: `.labkitrc`
+
+Both the npm package and shell script use the same config file:
+
+```yaml
+source: dallen4/labkit
+
+platforms:
+  - claude
+  - cursor
+
+skills:
+  - playwright-cli
+  - it2
+
+commands:
+  - spawn
+  - commit
+  - create-pr
+
+rules:
+  - commit-conventions
+  - agentic-workflow
+```
+
+**Syncing updates:** Run `npx labkit sync` (or `./labkit.sh sync`) anytime to pull the latest versions from the source repo. Your `.labkitrc` config determines what gets updated.
+
+## Post-Install: Hydration
+
+Skills that depend on external tooling (like `playwright-cli` and `it2`) ship with hydration scripts. After installing skills, run:
+
+```bash
+# Install all external dependencies
+scripts/hydrate.sh
+
+# Single skill only
+scripts/hydrate.sh playwright-cli
+
+# Preview what would run
+scripts/hydrate.sh --dry-run
 ```
 
 Each skill's `hydrate.sh` is idempotent — safe to run multiple times.
 
-## Dependencies
+## How It Works
 
-The `spawn`, `focus`, `worktrees`, and `teardown` commands require:
+labkit uses a **tiged + cpx** strategy to selectively pull patterns from GitHub:
 
-- [`wt`](https://github.com/nicholasgasior/wt) — git worktree manager CLI
-- [`it2`](https://iterm2.com/documentation-scripting-fundamentals.html) — iTerm2 CLI control
+1. **Stage** — `tiged` (maintained fork of `degit`) fetches relevant directories from the source repo to a temporary `.labkit-tmp/` directory
+2. **Copy** — `cpx` selectively copies files matching your `.labkitrc` config (supports glob patterns)
+3. **Clean** — Remove staging directory
 
-The `playwright-cli` skill requires:
+This enables cherry-picking individual files and syncing updates without cloning the entire repo.
 
-```bash
-npm install -g playwright-cli
-```
+## External Dependencies
+
+**Required for labkit CLI:**
+- Node.js >=18 — Required for `tiged`, `cpx`, YAML parsing
+- `npx` — Used to run `tiged` and `cpx2`
+
+**Required for specific commands:**
+- `/spawn`, `/focus`, `/worktrees`, `/teardown` → [`wt`](https://github.com/nicholasgasior/wt) (git worktree manager) + [`it2`](https://iterm2.com/documentation-scripting-fundamentals.html) (iTerm2 CLI)
+- `/create-pr`, `/research` → [`gh`](https://cli.github.com/) (GitHub CLI)
+
+**Required for specific skills:**
+- `playwright-cli` skill → `npm install -g playwright-cli`
+- `it2` skill → iTerm2 app with CLI tools enabled
+
+## Contributing
+
+Want to add your own patterns or improve existing ones? See [CLAUDE.md](CLAUDE.md) for development guidelines and architecture details.
