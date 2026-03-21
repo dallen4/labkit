@@ -120,12 +120,34 @@ copy_patterns() {
     local commands=($(echo "$config_json" | node -pe "JSON.parse(require('fs').readFileSync(0)).commands.join(' ')"))
     local rules=($(echo "$config_json" | node -pe "JSON.parse(require('fs').readFileSync(0)).rules.join(' ')"))
 
-    # Copy skills
+    # Copy skills to all platform-specific directories
+    # All platforms support SKILL.md, so we install to each platform's native directory
     for skill in "${skills[@]}"; do
         if [ -d "$STAGE_DIR/.claude/skills/$skill" ]; then
-            mkdir -p ".claude/skills"
-            cp -r "$STAGE_DIR/.claude/skills/$skill" ".claude/skills/"
-            success ".claude/skills/$skill/"
+            for platform in "${platforms[@]}"; do
+                case $platform in
+                    claude)
+                        mkdir -p ".claude/skills"
+                        cp -r "$STAGE_DIR/.claude/skills/$skill" ".claude/skills/"
+                        success ".claude/skills/$skill/"
+                        ;;
+                    cursor)
+                        mkdir -p ".cursor/skills"
+                        cp -r "$STAGE_DIR/.claude/skills/$skill" ".cursor/skills/"
+                        success ".cursor/skills/$skill/"
+                        ;;
+                    windsurf)
+                        mkdir -p ".windsurf/skills"
+                        cp -r "$STAGE_DIR/.claude/skills/$skill" ".windsurf/skills/"
+                        success ".windsurf/skills/$skill/"
+                        ;;
+                    copilot)
+                        mkdir -p ".github/skills"
+                        cp -r "$STAGE_DIR/.claude/skills/$skill" ".github/skills/"
+                        success ".github/skills/$skill/"
+                        ;;
+                esac
+            done
         fi
     done
 
