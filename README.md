@@ -10,11 +10,11 @@ Cherry-pick exactly what you need — commands, skills, and rules for Claude Cod
 
 | Feature | Claude | Cursor | Windsurf | Copilot |
 |---------|--------|--------|----------|---------|
-| **Skills** (`SKILL.md` dirs) | `.claude/skills/` | `.cursor/skills/` or `.claude/skills/` | `.windsurf/skills/` or `.claude/skills/` | `.github/skills/` or `.claude/skills/` |
+| **Skills** (`SKILL.md` dirs) | `.claude/skills/` | `.cursor/skills/` | `.windsurf/skills/` | `.github/skills/` |
 | **Commands** (slash) | `.claude/commands/*.md` | `.cursor/commands/*.md` | — | — |
 | **Rules** (passive context) | — | `.cursor/rules/*.mdc` | `.windsurf/rules/*.md` | `.github/copilot-instructions.md` |
 
-**Key insight:** `.claude/skills/` is a cross-compat path for Cursor, Windsurf, and Copilot. A single skills install covers all platforms.
+**Skills strategy:** All platforms support the SKILL.md standard. labkit installs skills to each platform's native directory for maximum compatibility and zero configuration.
 
 ### Available Patterns
 
@@ -54,9 +54,9 @@ npx labkit sync
 
 The `init` command walks you through:
 1. Platform selection (Claude, Cursor, Windsurf, Copilot)
-2. Skills to install (cross-platform, goes in `.claude/skills/`)
+2. Skills to install (installed to each platform's native skills directory)
 3. Commands to install (Claude + Cursor only)
-4. Rules to install (platform-specific)
+4. Rules to install (platform-specific formats)
 
 It creates a `.labkitrc` config file and pulls the selected patterns from GitHub using `tiged`.
 

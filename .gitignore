@@ -148,3 +148,4 @@ dist
 .labkitrc
 .labkitrc.*
 labkit
+!example/.labkitrc

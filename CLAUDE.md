@@ -101,11 +101,11 @@ Resolved via cosmiconfig in the npm package; parsed via `node -e` in `labkit.sh`
 
 | Feature | Claude | Cursor | Windsurf | Copilot |
 |---------|--------|--------|----------|---------|
-| **Skills** | `.claude/skills/` | `.cursor/skills/` or `.claude/skills/` | `.windsurf/skills/` or `.claude/skills/` | `.github/skills/` or `.claude/skills/` |
+| **Skills** | `.claude/skills/` | `.cursor/skills/` | `.windsurf/skills/` | `.github/skills/` |
 | **Commands** | `.claude/commands/` | `.cursor/commands/` | — | — |
 | **Rules** | — | `.cursor/rules/*.mdc` | `.windsurf/rules/*.md` | `.github/copilot-instructions.md` |
 
-**Key insight:** `.claude/skills/` is a cross-compat path. Installing skills there covers all four platforms.
+**Skills strategy:** All platforms support SKILL.md. labkit installs skills to each platform's native directory for maximum compatibility. While some platforms can read from `.claude/skills/` as a fallback, we install to platform-specific directories to avoid requiring users to enable cross-compat settings.
 ## Pattern Parity
 
 When updating conventions (e.g., commit format), maintain parity across platforms:
