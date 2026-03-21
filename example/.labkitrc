@@ -1,0 +1,11 @@
+source: dallen4/labkit
+platforms:
+  - claude
+  - copilot
+skills:
+  - it2
+commands:
+  - create-pr
+  - commit
+  - research
+rules: []
