@@ -28,6 +28,9 @@ src/
   skills/               Skills with SKILL.md (playwright-cli, it2)
   settings.json         Recommended permissions + agent teams env var
 
+.agents/
+  skills/               Marketplace skills, restored from skills-lock.json (gitignored)
+
 .cursor/
   commands/             Mirror of .claude/commands/ (Cursor supports slash commands too)
   rules/                Rule files (.mdc with frontmatter)
@@ -39,12 +42,13 @@ src/
   copilot-instructions.md  Combined instructions file
 
 scripts/
-  hydrate.sh            Orchestrator — discovers and runs all skill hydration scripts
+  hydrate.sh            Orchestrator — Layer A (vendored CLI deps) + Layer B (marketplace skills)
 
 labkit.sh               Portable bash alternative to npm package
 package.json            npm package config + build scripts
 tsconfig.json           TypeScript config
 tsdown.config.ts        Build config (uses tsdown, not tsup)
+skills-lock.json        Pinned manifest of marketplace skills (find-skills, gh-cli, worktrunk)
 ```
 
 ## Architecture
@@ -106,6 +110,7 @@ Resolved via cosmiconfig in the npm package; parsed via `node -e` in `labkit.sh`
 | **Rules** | — | `.cursor/rules/*.mdc` | `.windsurf/rules/*.md` | `.github/copilot-instructions.md` |
 
 **Skills strategy:** All platforms support SKILL.md. labkit installs skills to each platform's native directory for maximum compatibility. While some platforms can read from `.claude/skills/` as a fallback, we install to platform-specific directories to avoid requiring users to enable cross-compat settings.
+
 ## Pattern Parity
 
 When updating conventions (e.g., commit format), maintain parity across platforms:
@@ -135,9 +140,17 @@ When updating conventions (e.g., commit format), maintain parity across platform
 
 ## Hydration
 
-Skills that wrap external CLIs include a `hydrate.sh` script in their directory (e.g., `.claude/skills/playwright-cli/hydrate.sh`). The top-level orchestrator `scripts/hydrate.sh` discovers and runs them all. Each hydration script is idempotent, checks if the dependency is already installed, and exits non-zero on failure.
+`scripts/hydrate.sh` is the orchestrator. It handles two layers:
 
-When adding a new skill that depends on external tooling, create a `hydrate.sh` in the skill's directory following the same pattern.
+**Layer A — vendored skills (CLI dependencies).** Skills that wrap external CLIs include a `hydrate.sh` script in their directory (e.g., `.claude/skills/playwright-cli/hydrate.sh`). The orchestrator discovers and runs them all. Each is idempotent, checks if the dependency is already installed, and exits non-zero on failure. When adding a new skill that depends on external tooling, create a `hydrate.sh` in the skill's directory following the same pattern.
+
+**Layer B — marketplace skills (declared, not vendored).** Generic skills from the [skills.sh](https://skills.sh) ecosystem are pinned in `skills-lock.json` rather than committed. The orchestrator restores them into `.agents/skills/` with `npx skills experimental_install` (idempotent). This avoids one-off `npx skills add` followed by manual maintenance — refresh everything with `npx skills update`.
+
+- **`.agents/skills/` is the canonical cross-agent location** (not per-agent `.claude/skills/`). Add new marketplace skills with `npx skills add <owner/repo> --skill <name> -a universal` so they land in `.agents/skills/` without spraying per-agent mirrors, then commit the updated `skills-lock.json`.
+- The restored skill directories are gitignored; `skills-lock.json` is the source of truth.
+- Currently pinned: `find-skills` (`vercel-labs/skills`), `gh-cli` (`trailofbits/skills`), `worktrunk` (`max-sixty/worktrunk`).
+
+`install.sh` ships `skills-lock.json` into the target and adds `/.agents/skills/` to its `.gitignore`. Passing a single `[skill-name]` to `scripts/hydrate.sh` targets one Layer-A skill and skips Layer B.
 
 ## Development
 

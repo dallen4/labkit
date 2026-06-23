@@ -149,3 +149,12 @@ dist
 .labkitrc.*
 labkit
 !example/.labkitrc
+
+# Marketplace skills are restored from skills-lock.json, not vendored.
+# Source of truth: skills-lock.json → scripts/hydrate.sh (npx skills experimental_install)
+/.agents/skills/
+
+# Defensive: stray per-agent mirror dirs if `npx skills add` is ever
+# run without `-a universal`
+/.devin/
+/.windsurf/skills/

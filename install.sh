@@ -103,6 +103,44 @@ merge_claude_settings() {
   fi
 }
 
+# Ship the marketplace-skills manifest; skills themselves are restored on hydrate.
+# Merges into an existing target lock (like settings.json), preserving the target's
+# own pins on name conflicts and only adding labkit's missing skills.
+install_skills_lock() {
+  local src="$LABKIT_DIR/skills-lock.json"
+  local dst="$TARGET_DIR/skills-lock.json"
+  [[ -f "$src" ]] || return 0
+
+  if [[ ! -f "$dst" ]]; then
+    cp "$src" "$dst"
+    echo "  copied   skills-lock.json"
+  elif command -v jq &>/dev/null; then
+    local merged
+    merged=$(jq -s '
+      .[0] as $e | .[1] as $n |
+      {
+        version: ([($e.version // 1), ($n.version // 1)] | max),
+        skills:  (($n.skills // {}) + ($e.skills // {}))
+      }
+    ' "$dst" "$src")
+    echo "$merged" > "$dst"
+    echo "  merged   skills-lock.json (existing pins preserved)"
+  elif [[ $FORCE -eq 1 ]]; then
+    cp "$src" "$dst"
+    echo "  copied   skills-lock.json (overwritten — install jq for merge)"
+  else
+    echo "  skipped  skills-lock.json (already exists — install jq for auto-merge)"
+    echo "           manually merge from: $LABKIT_DIR/skills-lock.json"
+  fi
+
+  # Restored skills are not vendored — keep them out of the target's history
+  local gi="$TARGET_DIR/.gitignore"
+  if [[ ! -f "$gi" ]] || ! grep -qxF '/.agents/skills/' "$gi"; then
+    printf '\n# Marketplace skills restored from skills-lock.json (npx skills experimental_install)\n/.agents/skills/\n' >> "$gi"
+    echo "  updated  .gitignore (+/.agents/skills/)"
+  fi
+}
+
 # ── Install each tool ─────────────────────────────────────────────────────────
 for TOOL in "${TOOLS[@]}"; do
   case "$TOOL" in
@@ -114,6 +152,7 @@ for TOOL in "${TOOLS[@]}"; do
       copy_dir "$LABKIT_DIR/.claude/skills"   "$TARGET_DIR/.claude/skills"
       echo "  copied   .claude/skills/"
       merge_claude_settings
+      install_skills_lock
       ;;
 
     windsurf)
@@ -149,7 +188,9 @@ echo "Done. Patterns installed into $TARGET_DIR"
 # ── Hydration hint ────────────────────────────────────────────────────────────
 if [[ " ${TOOLS[*]} " == *" claude "* ]]; then
   echo ""
-  echo "Hint: run scripts/hydrate.sh to install external dependencies (playwright-cli, it2, etc.)"
+  echo "Hint: run scripts/hydrate.sh to install CLI dependencies (playwright-cli, it2)"
+  echo "      and restore marketplace skills from skills-lock.json into .agents/skills/."
+  echo "      Refresh marketplace skills later with: npx skills update"
 fi
 
 # ── Offer to commit ───────────────────────────────────────────────────────────
@@ -160,7 +201,7 @@ if git -C "$TARGET_DIR" rev-parse --git-dir &>/dev/null; then
     STAGE_PATHS=()
     for TOOL in "${TOOLS[@]}"; do
       case "$TOOL" in
-        claude)   STAGE_PATHS+=(".claude/commands" ".claude/skills") ;;
+        claude)   STAGE_PATHS+=(".claude/commands" ".claude/skills" "skills-lock.json" ".gitignore") ;;
         windsurf) STAGE_PATHS+=(".windsurf") ;;
         cursor)   STAGE_PATHS+=(".cursor") ;;
         copilot)  STAGE_PATHS+=(".github/copilot-instructions.md") ;;

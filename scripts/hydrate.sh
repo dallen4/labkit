@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
 # labkit hydrate — install external dependencies for skills
 # Usage: scripts/hydrate.sh [skill-name] [--dry-run]
+#
+# Two layers:
+#   A) Vendored skills — runs each .claude/skills/*/hydrate.sh to install the
+#      underlying CLI binary (it2, playwright-cli, …).
+#   B) Marketplace skills — if skills-lock.json exists, restores the pinned
+#      skills into .agents/skills/ via `npx skills experimental_install`.
+#      Refresh them later with `npx skills update`.
+#
+# Passing a [skill-name] targets a single Layer-A skill and skips Layer B.
 set -euo pipefail
 
 LABKIT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SKILLS_DIR="$LABKIT_DIR/.claude/skills"
+LOCK_FILE="$LABKIT_DIR/skills-lock.json"
 DRY_RUN=0
 SKILL_FILTER=""
 
@@ -17,7 +27,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# ── Discover hydration scripts ────────────────────────────────────────────────
+FAILED=0
+
+# ── Layer A: vendored skills (CLI dependencies) ───────────────────────────────
 SCRIPTS=()
 if [[ -n "$SKILL_FILTER" ]]; then
   target="$SKILLS_DIR/$SKILL_FILTER/hydrate.sh"
@@ -32,14 +44,6 @@ else
     [[ -f "$script" ]] && SCRIPTS+=("$script")
   done
 fi
-
-if [[ ${#SCRIPTS[@]} -eq 0 ]]; then
-  echo "No hydration scripts found."
-  exit 0
-fi
-
-# ── Run ───────────────────────────────────────────────────────────────────────
-FAILED=0
 
 for script in "${SCRIPTS[@]}"; do
   skill="$(basename "$(dirname "$script")")"
@@ -59,7 +63,35 @@ for script in "${SCRIPTS[@]}"; do
   fi
 done
 
+# ── Layer B: marketplace skills (restored from skills-lock.json) ──────────────
+# Skipped when targeting a single Layer-A skill via [skill-name].
+if [[ -z "$SKILL_FILTER" && -f "$LOCK_FILE" ]]; then
+  if [[ $DRY_RUN -eq 1 ]]; then
+    echo "[dry-run] would run: npx skills experimental_install -y (from $LOCK_FILE)"
+  elif ! command -v npx &>/dev/null; then
+    echo "── marketplace skills ──"
+    echo "  skipped (npx not found — install Node.js to restore skills-lock.json)"
+    echo ""
+    FAILED=1
+  else
+    echo "── marketplace skills ──"
+    if (cd "$LABKIT_DIR" && npx -y skills@latest experimental_install -y); then
+      echo ""
+    else
+      echo "  FAILED (exit $?)"
+      echo ""
+      FAILED=1
+    fi
+  fi
+fi
+
+# ── Summary ───────────────────────────────────────────────────────────────────
 if [[ $DRY_RUN -eq 1 ]]; then
+  exit 0
+fi
+
+if [[ ${#SCRIPTS[@]} -eq 0 && ! ( -z "$SKILL_FILTER" && -f "$LOCK_FILE" ) ]]; then
+  echo "Nothing to hydrate."
   exit 0
 fi
 
